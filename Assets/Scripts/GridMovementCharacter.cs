@@ -24,7 +24,6 @@ public class GridMovementCharacter : MonoBehaviour
     private MovementDirection lastMovementDirection; /*ADDED*/
     private Coroutine movementCoroutine;
 
-
     //Animator anim; /*ADDED*/
 
     private bool isIdle = false; /*ADDED*/
