@@ -16,7 +16,7 @@ MonoBehaviour:
   m_Parent: {fileID: 114350483966674976}
   m_Children:
   - {fileID: 8926484042661614539}
-  m_UIPosition: {x: 772, y: -835}
+  m_UIPosition: {x: 771, y: -833}
   m_UICollapsed: 0
   m_UISuperCollapsed: 0
   m_InputSlots: []
@@ -52,7 +52,7 @@ MonoBehaviour:
   - {fileID: 8926484042661614596}
   - {fileID: 8926484042661614601}
   - {fileID: 8926484042661614743}
-  m_UIPosition: {x: 798, y: 552}
+  m_UIPosition: {x: 790, y: 641}
   m_UICollapsed: 0
   m_UISuperCollapsed: 0
   m_InputSlots:
@@ -155,9 +155,9 @@ MonoBehaviour:
     position:
       serializedVersion: 2
       x: 177
-      y: -894
-      width: 1070
-      height: 2101
+      y: -892
+      width: 1062
+      height: 2164
     contents:
     - model: {fileID: 114023846229194376}
       id: 0
@@ -212,9 +212,9 @@ MonoBehaviour:
   uiBounds:
     serializedVersion: 2
     x: 177
-    y: -894
-    width: 1070
-    height: 2096
+    y: -892
+    width: 1062
+    height: 2164
 --- !u!114 &114350483966674976
 MonoBehaviour:
   m_ObjectHideFlags: 1
@@ -522,8 +522,8 @@ VisualEffectResource:
       lightProbeUsage: 0
     m_CullingFlags: 0
     m_UpdateMode: 0
-    m_PreWarmDeltaTime: 0.05
-    m_PreWarmStepCount: 0
+    m_PreWarmDeltaTime: 4.8
+    m_PreWarmStepCount: 1
     m_InitialEventName: OnPlay
     m_InstancingMode: 0
     m_InstancingCapacity: 64
@@ -5909,7 +5909,7 @@ MonoBehaviour:
     linkedSlots:
     - outputSlot: {fileID: 8926484042661614844}
       inputSlot: {fileID: 8926484042661614692}
-    position: {x: 568, y: 287}
+    position: {x: 571, y: 334}
     expandedSlots: []
     expanded: 1
     supecollapsed: 0
