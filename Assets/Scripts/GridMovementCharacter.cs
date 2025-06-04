@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using UnityEngine;
 using System.Collections;
+using UnityEngine.VFX;
 
 public enum MovementDirection
 {
@@ -23,6 +24,7 @@ public class GridMovementCharacter : MonoBehaviour
     private MovementDirection currentDirection;
     private MovementDirection lastMovementDirection; /*ADDED*/
     private Coroutine movementCoroutine;
+    public VisualEffect vfxRenderer;
 
     //Animator anim; /*ADDED*/
 
@@ -115,6 +117,7 @@ public class GridMovementCharacter : MonoBehaviour
             {
                 float step = moveSpeed * Time.fixedDeltaTime;
                 transform.position = Vector3.MoveTowards(transform.position, targetPosition, step);
+                vfxRenderer.SetVector3("ColliderPos", transform.position);
 
                 yield return new WaitForFixedUpdate();
             }
