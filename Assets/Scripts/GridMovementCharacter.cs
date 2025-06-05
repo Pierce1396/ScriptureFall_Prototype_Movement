@@ -11,7 +11,7 @@ public class GridMovementCharacter : MonoBehaviour
     [SerializeField] private TileSelection tileSelection;
 
     [Header("Enemy References")]
-    public List<EnemyAI> enemies; // Assign in Inspector or auto-find in Start
+    public List<EnemyAI> enemies;
 
     private Vector2 targetPosition;
     private bool isMoving = false;
@@ -19,11 +19,12 @@ public class GridMovementCharacter : MonoBehaviour
 
     private void Start()
     {
-        // Auto-populate enemies if not assigned manually
         if (enemies == null || enemies.Count == 0)
         {
             enemies = new List<EnemyAI>(FindObjectsOfType<EnemyAI>());
         }
+
+        gameObject.tag = "Player"; // Ensure the player has the correct tag
     }
 
     private void Update()
@@ -46,15 +47,14 @@ public class GridMovementCharacter : MonoBehaviour
 
         if (path != null && path.Count > 0)
         {
-            // Check if any enemy has detected the player
             bool detectedByAnyEnemy = enemies.Exists(e => e.HasDetectedPlayer());
 
             int maxSteps = path.Count;
 
             if (detectedByAnyEnemy)
             {
-                int enemyMaxSteps = 4;               // Enemy moves 4 steps
-                int allowedPlayerSteps = enemyMaxSteps / 2;  // Player can move half that (2 steps)
+                int enemyMaxSteps = 4;
+                int allowedPlayerSteps = enemyMaxSteps / 2;
                 maxSteps = Mathf.Min(maxSteps, allowedPlayerSteps);
             }
 
@@ -78,6 +78,14 @@ public class GridMovementCharacter : MonoBehaviour
 
         foreach (Vector2 waypoint in path)
         {
+            Vector2Int targetGrid = GridUtils.WorldToGrid(waypoint);
+
+            if (GridUtils.IsGridPositionOccupied(targetGrid, transform, enemies))
+            {
+                Debug.Log("attack");
+                break;
+            }
+
             Vector2 target = waypoint + gridSize / 2;
 
             while ((Vector2)transform.position != target)
@@ -89,7 +97,6 @@ public class GridMovementCharacter : MonoBehaviour
 
         isMoving = false;
 
-        // After player moves, trigger enemy movement
         foreach (var enemy in enemies)
         {
             enemy.MoveTowardPlayer();

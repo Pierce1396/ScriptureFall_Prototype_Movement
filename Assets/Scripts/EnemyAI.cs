@@ -8,6 +8,7 @@ public class EnemyAI : MonoBehaviour
     public Transform player;
     public ObstacleTilemap obstacleTilemap;
     public Vector2 gridSize = new Vector2(1f, 1f);
+    public List<EnemyAI> allEnemies;
 
     [Header("Detection & Movement Settings")]
     public float detectionRadius = 5f;
@@ -15,6 +16,14 @@ public class EnemyAI : MonoBehaviour
     public float moveSpeed = 5f;
 
     private bool hasDetectedPlayer = false;
+
+    private void Start()
+    {
+        if (allEnemies == null || allEnemies.Count == 0)
+        {
+            allEnemies = new List<EnemyAI>(FindObjectsOfType<EnemyAI>());
+        }
+    }
 
     public void MoveTowardPlayer()
     {
@@ -43,6 +52,14 @@ public class EnemyAI : MonoBehaviour
     {
         foreach (var step in path)
         {
+            Vector2Int targetGrid = GridUtils.WorldToGrid(step);
+
+            if (GridUtils.IsGridPositionOccupied(targetGrid, transform, allEnemies))
+            {
+                Debug.Log("attack");
+                break;
+            }
+
             Vector2 targetPos = step + gridSize / 2f;
             while ((Vector2)transform.position != targetPos)
             {
