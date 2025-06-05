@@ -9,6 +9,16 @@ public class TileSelection : MonoBehaviour
     [SerializeField] private Vector2 gridSize = new Vector2(1f, 1f);
 
     private Vector2Int highlightedTilePosition = Vector2Int.zero;
+    private SpriteRenderer spriteRenderer;
+
+    private void Awake()
+    {
+        spriteRenderer = GetComponent<SpriteRenderer>();
+        if (spriteRenderer == null)
+        {
+            Debug.LogError("TileSelection requires a SpriteRenderer component.");
+        }
+    }
 
     private void Update()
     {
@@ -60,12 +70,14 @@ public class TileSelection : MonoBehaviour
         RaycastHit2D hit = Physics2D.Raycast(worldPosition, Vector2.zero);
 
         // Check if there's a collider hit (i.e., an obstacle)
-        if (hit.collider != null)
-        {
-            return true;
-        }
-
-        return false;
+        return hit.collider != null;
     }
 
+    public void SetColor(Color color)
+    {
+        if (spriteRenderer != null)
+        {
+            spriteRenderer.color = color;
+        }
+    }
 }
