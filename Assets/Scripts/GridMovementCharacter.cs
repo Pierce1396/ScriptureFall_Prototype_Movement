@@ -1,15 +1,6 @@
+using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using System.Collections;
-using UnityEngine.VFX;
-
-public enum MovementDirection
-{
-    Up,
-    Down,
-    Left,
-    Right
-}
 
 public class GridMovementCharacter : MonoBehaviour
 {
@@ -19,71 +10,32 @@ public class GridMovementCharacter : MonoBehaviour
     [SerializeField] private ObstacleTilemap obstacleTilemap;
     [SerializeField] private TileSelection tileSelection;
 
+    [Header("Enemy References")]
+    public List<EnemyAI> enemies; // Assign in Inspector or auto-find in Start
+
     private Vector2 targetPosition;
     private bool isMoving = false;
-    private MovementDirection currentDirection;
-    private MovementDirection lastMovementDirection; /*ADDED*/
     private Coroutine movementCoroutine;
-    public VisualEffect vfxRenderer;
 
-    //Animator anim; /*ADDED*/
-
-    private bool isIdle = false; /*ADDED*/
-    private float idleDelay = 0.1f; /*ADDED*/
-
-    private void Start() /*ADDED*/
+    private void Start()
     {
-        //anim = GetComponent<Animator>(); /*ADDED*/
-        currentDirection = MovementDirection.Down; /*ADDED*/
+        // Auto-populate enemies if not assigned manually
+        if (enemies == null || enemies.Count == 0)
+        {
+            enemies = new List<EnemyAI>(FindObjectsOfType<EnemyAI>());
+        }
     }
 
     private void Update()
     {
-        HandleMovementInput();
-    }
-
-    private void HandleMovementInput()
-    {
-        //!isMoving &&
         if (Input.GetMouseButtonDown(0))
         {
-
             targetPosition = tileSelection.GetHighlightedTilePosition();
-            Vector2Int clickedTile = GridUtils.WorldToGrid(targetPosition);
 
-            if (obstacleTilemap.IsTileObstacle(clickedTile)) /*ADDED*/
+            if (targetPosition != Vector2.zero)
             {
-                Vector2Int nearestNonObstacleTile = FindNearestNonObstacleTile(clickedTile); /*ADDED*/
-
-                if (nearestNonObstacleTile != Vector2Int.zero) /*ADDED*/
-                {
-                    targetPosition = GridUtils.GridToWorld(nearestNonObstacleTile) + gridSize / 2; /*ADDED*/
-                    FindPathToTargetPosition();
-                }
+                FindPathToTargetPosition();
             }
-            else /*ADDED*/
-            {
-                if (targetPosition != Vector2.zero) /*ADDED*/
-                {
-                    FindPathToTargetPosition();
-                }
-            }
-
-            lastMovementDirection = currentDirection; /*ADDED*/
-        }
-
-        if (isMoving)
-        {
-            MoveTowardsTarget();
-        }
-        else /*ADDED*/
-        {
-
-            //anim.SetBool("Walk Up", false);
-            //anim.SetBool("Walk Down", false);
-            //anim.SetBool("Walk Left", false);
-            //anim.SetBool("Walk Right", false);
-
         }
     }
 
@@ -94,137 +46,53 @@ public class GridMovementCharacter : MonoBehaviour
 
         if (path != null && path.Count > 0)
         {
-            if (movementCoroutine != null)
+            // Check if any enemy has detected the player
+            bool detectedByAnyEnemy = enemies.Exists(e => e.HasDetectedPlayer());
+
+            int maxSteps = path.Count;
+
+            if (detectedByAnyEnemy)
             {
-                StopCoroutine(movementCoroutine); // stop previous movement
+                int enemyMaxSteps = 4;               // Enemy moves 4 steps
+                int allowedPlayerSteps = enemyMaxSteps / 2;  // Player can move half that (2 steps)
+                maxSteps = Mathf.Min(maxSteps, allowedPlayerSteps);
             }
 
-            movementCoroutine = StartCoroutine(MoveAlongPath(path));
-        }
+            if (maxSteps > 0)
+            {
+                List<Vector2> truncatedPath = path.GetRange(0, maxSteps);
 
+                if (movementCoroutine != null)
+                {
+                    StopCoroutine(movementCoroutine);
+                }
+
+                movementCoroutine = StartCoroutine(MoveAlongPath(truncatedPath));
+            }
+        }
     }
 
     private IEnumerator MoveAlongPath(List<Vector2> path)
     {
         isMoving = true;
-        int currentWaypointIndex = 0;
 
-        while (currentWaypointIndex < path.Count)
+        foreach (Vector2 waypoint in path)
         {
-            targetPosition = path[currentWaypointIndex] + gridSize / 2;
+            Vector2 target = waypoint + gridSize / 2;
 
-            while ((Vector2)transform.position != targetPosition)
+            while ((Vector2)transform.position != target)
             {
-                float step = moveSpeed * Time.fixedDeltaTime;
-                transform.position = Vector3.MoveTowards(transform.position, targetPosition, step);
-                vfxRenderer.SetVector3("ColliderPos", transform.position);
-
-                yield return new WaitForFixedUpdate();
+                transform.position = Vector3.MoveTowards(transform.position, target, moveSpeed * Time.deltaTime);
+                yield return null;
             }
-
-            currentWaypointIndex++;
         }
 
         isMoving = false;
-    }
 
-    private void MoveTowardsTarget()
-    {
-        Vector2 direction = (targetPosition - (Vector2)transform.position).normalized;
-
-        bool isHorizontalMovement = Mathf.Abs(direction.x) > Mathf.Abs(direction.y); /*ADDED*/
-        bool isVerticalMovement = Mathf.Abs(direction.y) > Mathf.Abs(direction.x); /*ADDED*/
-
-        if (isHorizontalMovement) /*ADDED*/
+        // After player moves, trigger enemy movement
+        foreach (var enemy in enemies)
         {
-            if (direction.x > 0)
-            {
-                currentDirection = MovementDirection.Right;
-                //anim.SetBool("Walk Right", true);
-            }
-            else
-            {
-                currentDirection = MovementDirection.Left;
-                //anim.SetBool("Walk Left", true);
-            }
+            enemy.MoveTowardPlayer();
         }
-        else if (isVerticalMovement) /*ADDED*/
-        {
-            if (direction.y > 0)
-            {
-                currentDirection = MovementDirection.Up;
-                //anim.SetBool("Walk Up", true);
-            }
-            else
-            {
-                currentDirection = MovementDirection.Down;
-                //anim.SetBool("Walk Down", true);
-            }
-        }
-        else
-        {
-            // If not moving, set all animation bools to false after a delay
-            if (!isIdle) /*ADDED*/
-            {
-                StartCoroutine(ResetAnimationBoolsWithDelay()); /*ADDED*/
-            }
-        }
-    }
-
-    private IEnumerator ResetAnimationBoolsWithDelay()
-    {
-        isIdle = true; /*ADDED*/
-        yield return new WaitForSeconds(idleDelay); /*ADDED*/
-
-        // Reset all animation bools to false
-        //anim.SetBool("Walk Up", false);
-        //anim.SetBool("Walk Down", false);
-        //anim.SetBool("Walk Left", false);
-        //anim.SetBool("Walk Right", false);
-
-        isIdle = false; /*ADDED*/
-    }
-
-    private Vector2Int FindNearestNonObstacleTile(Vector2Int startTile) /*ADDED*/
-    {
-        Queue<Vector2Int> queue = new Queue<Vector2Int>(); /*ADDED*/
-        HashSet<Vector2Int> visited = new HashSet<Vector2Int>(); /*ADDED*/
-
-        queue.Enqueue(startTile); /*ADDED*/
-        visited.Add(startTile); /*ADDED*/
-
-        while (queue.Count > 0) /*ADDED*/
-        {
-            Vector2Int currentTile = queue.Dequeue(); /*ADDED*/
-
-            // Check if the current tile is not an obstacle
-            if (!obstacleTilemap.IsTileObstacle(currentTile)) /*ADDED*/
-            {
-                return currentTile; // Found a non-obstacle tile
-            }
-
-            // Add neighboring tiles to the queue if not visited
-            foreach (Vector2Int neighbor in GetAdjacentTiles(currentTile)) /*ADDED*/
-            {
-                if (!visited.Contains(neighbor)) /*ADDED*/
-                {
-                    queue.Enqueue(neighbor); /*ADDED*/
-                    visited.Add(neighbor); /*ADDED*/
-                }
-            }
-        }
-
-        return Vector2Int.zero; // No available non-obstacle tile found /*ADDED*/
-    }
-
-    private List<Vector2Int> GetAdjacentTiles(Vector2Int position) /*ADDED*/
-    {
-        return new List<Vector2Int> /*ADDED*/
-        {
-            position + Vector2Int.up,
-            position + Vector2Int.down,
-            position + Vector2Int.left,
-            position + Vector2Int.right
-        };
     }
 }
